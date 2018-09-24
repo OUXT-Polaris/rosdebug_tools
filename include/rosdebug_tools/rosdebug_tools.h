@@ -11,14 +11,17 @@
 #include <glog/logging.h>
 
 //headers in boost
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 
 class rosdebug_tools
 {
 public:
     rosdebug_tools();
     ~rosdebug_tools();
+    static void _failure_callback();
 private:
-    boost::shared_ptr<message_buffer> _buf;
+    static boost::shared_ptr<message_buffer> _buf;
 };
 
 #endif  //ROSDEBUG_TOOLS_H_INCLUDED
