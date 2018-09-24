@@ -17,10 +17,10 @@ message_buffer::~message_buffer()
 
 }
 
-void message_buffer::write_buffer()
+std::vector<ros::MessageEvent<topic_tools::ShapeShifter const> > message_buffer::get_buffer()
 {
     boost::mutex::scoped_lock look(_mtx);
-    return;
+    return _message_events;
 }
 
 void message_buffer::_callback(ros::MessageEvent<topic_tools::ShapeShifter const> msg_event, std::string const& topic, boost::shared_ptr<ros::Subscriber> subscriber, boost::shared_ptr<int> count)
@@ -41,4 +41,5 @@ void message_buffer::_update_events()
             _new_message_events.push_back(_message_events[i]);
         }
     }
+    _message_events = _new_message_events;
 }

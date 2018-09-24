@@ -16,7 +16,7 @@ public:
     message_buffer(std::string topic);
     message_buffer(std::string topic,double buffer_length);
     ~message_buffer();
-    void write_buffer();
+    std::vector<ros::MessageEvent<topic_tools::ShapeShifter const> > get_buffer();
 private:
     void _callback(ros::MessageEvent<topic_tools::ShapeShifter const> msg_event, std::string const& topic, boost::shared_ptr<ros::Subscriber> subscriber, boost::shared_ptr<int> count);
     void _update_events();
