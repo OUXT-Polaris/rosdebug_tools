@@ -1,45 +1,50 @@
 #include <rosdebug_tools/message_buffer.h>
 
-message_buffer::message_buffer(std::string topic) : _buffer_length(3)
+namespace rosdebug_tools
 {
-    boost::shared_ptr<int> count = boost::make_shared<int>(0);
-    *_sub_ptr = _nh.subscribe<topic_tools::ShapeShifter>(topic, 1, boost::bind(&message_buffer::_callback, this, _1, topic, _sub_ptr, count));
-}
-
-message_buffer::message_buffer(std::string topic,double buffer_length) : _buffer_length(buffer_length)
-{
-    boost::shared_ptr<int> count = boost::make_shared<int>(0);
-    *_sub_ptr = _nh.subscribe<topic_tools::ShapeShifter>(topic, 1, boost::bind(&message_buffer::_callback, this, _1, topic, _sub_ptr, count));
-}
-
-message_buffer::~message_buffer()
-{
-
-}
-
-std::vector<ros::MessageEvent<topic_tools::ShapeShifter const> > message_buffer::get_buffer()
-{
-    boost::mutex::scoped_lock look(_mtx);
-    return _message_events;
-}
-
-void message_buffer::_callback(ros::MessageEvent<topic_tools::ShapeShifter const> msg_event, std::string const& topic, boost::shared_ptr<ros::Subscriber> subscriber, boost::shared_ptr<int> count)
-{
-    boost::mutex::scoped_lock look(_mtx);
-    _message_events.push_back(msg_event);
-    _update_events();
-}
-
-void message_buffer::_update_events()
-{
-    boost::mutex::scoped_lock look(_mtx);
-    std::vector<ros::MessageEvent<topic_tools::ShapeShifter const> > _new_message_events;
-    for(int i=0; i<_message_events.size(); i++)
+    message_buffer::message_buffer(ros::NodeHandle nh,std::string topic) : buffer_length_(3)
     {
-        if(_message_events[i].getReceiptTime() > ros::Time::now() - _buffer_length)
-        {
-            _new_message_events.push_back(_message_events[i]);
-        }
+        boost::shared_ptr<int> count = boost::make_shared<int>(0);
+        nh_ = nh;
+        *sub_ptr_ = nh_.subscribe<topic_tools::ShapeShifter>(topic, 1, boost::bind(&message_buffer::callback, this, _1, topic, sub_ptr_, count));
     }
-    _message_events = _new_message_events;
+
+    message_buffer::message_buffer(ros::NodeHandle nh,std::string topic,double buffer_length) : buffer_length_(buffer_length)
+    {
+        boost::shared_ptr<int> count = boost::make_shared<int>(0);
+        nh_ = nh;
+        *sub_ptr_ = nh_.subscribe<topic_tools::ShapeShifter>(topic, 1, boost::bind(&message_buffer::callback, this, _1, topic, sub_ptr_, count));
+    }
+
+    message_buffer::~message_buffer()
+    {
+
+    }
+
+    std::vector<ros::MessageEvent<topic_tools::ShapeShifter const> > message_buffer::getBuffer()
+    {
+        boost::mutex::scoped_lock look(mtx_);
+        return message_events_;
+    }
+
+    void message_buffer::callback(ros::MessageEvent<topic_tools::ShapeShifter const> msg_event, std::string const& topic, boost::shared_ptr<ros::Subscriber> subscriber, boost::shared_ptr<int> count)
+    {
+        boost::mutex::scoped_lock look(mtx_);
+        message_events_.push_back(msg_event);
+        updateEvents();
+    }
+
+    void message_buffer::updateEvents()
+    {
+        boost::mutex::scoped_lock look(mtx_);
+        std::vector<ros::MessageEvent<topic_tools::ShapeShifter const> > newmessage_events;
+        for(int i=0; i<message_events_.size(); i++)
+        {
+            if(message_events_[i].getReceiptTime() > ros::Time::now() - buffer_length_)
+            {
+                newmessage_events.push_back(message_events_[i]);
+            }
+        }
+        message_events_ = newmessage_events;
+    }
 }
