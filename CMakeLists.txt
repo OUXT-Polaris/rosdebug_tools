@@ -35,6 +35,7 @@ include_directories(
 
 add_library(rosdebug_tools src/rosdebug_tools.cpp src/message_buffer.cpp src/rosbag_writer.cpp)
 target_link_libraries(rosdebug_tools ${catkin_LIBRARIES} ${GLOG_LIBRARIES})
+add_dependencies(rosdebug_tools rosdebug_tools_generate_messages_cpp)
 
 install(TARGETS rosdebug_tools
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
